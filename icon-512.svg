@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 192 192" role="img" aria-label="Lista Fácil">
+  <rect width="192" height="192" rx="42" fill="#F5EBE1"/>
+  <rect x="14" y="14" width="164" height="164" rx="32" fill="none" stroke="#E0D0C0" stroke-width="2"/>
+  <g transform="translate(60,44)">
+    <path d="M22 12 L6 20 L6 68 C6 73 10 77 15 77 L57 77 C62 77 66 73 66 68 L66 20 L50 12 Z" fill="#D85012"/>
+    <path d="M22 12 L6 20 L22 28 L50 28 L66 20 L50 12 Z" fill="#B84210"/>
+    <path d="M22 12 C22 6 26 2 36 2 C46 2 50 6 50 12" fill="none" stroke="#1E2A38" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="36" cy="48" r="14" fill="white" opacity="0.95"/>
+    <path d="M28 48 L34 54 L46 38" fill="none" stroke="#D85012" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="96" y="150" text-anchor="middle" font-family="Georgia, serif" font-size="16" font-weight="700" fill="#1E2A38" letter-spacing="0.02em">Lista Fácil</text>
+</svg>

@@ -1,0 +1,9 @@
+Lista Fácil — lista de compras PWA, offline e gratuita. Adicione itens, informe qtd/peso (0,600kg) e preço/kg, marque e veja o total (qtd × preço) em tempo real. Com histórico, modo escuro e backup JSON. Feito em HTML/CSS/JS puro para GitHub Pages.
+
+---
+Versão ultra-curta (100 chars):
+PWA de lista de compras offline: qtd × preço unitário = total em tempo real. Leve, sem login, 100% grátis.
+
+---
+Topics sugeridos:
+pwa, lista-de-compras, offline-first, github-pages, vanilla-js, localstorage, shopping-list

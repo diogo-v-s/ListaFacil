@@ -1,0 +1,55 @@
+# Modelagem de Dados - Lista Fácil
+
+## Visão Geral
+PWA com persistência em localStorage, offline, export/import JSON.
+
+## Estrutura Principal (Chave: `lista-facil-data`)
+```
+AppData
+├── currentList: ShoppingList
+├── history: ShoppingList[]
+└── settings: UserSettings
+```
+
+## Entidades
+```
+ShoppingList
+├── id: string (UUID)
+├── name: string
+├── createdAt: ISO 8601
+├── completedAt?: ISO 8601
+├── items: ListItem[]
+└── total: number (cache qtd*preço dos checked)
+
+ListItem
+├── id: string
+├── name: string
+├── quantity: number (1 ou 0.600, até 3 casas)
+├── price: number | null (unitário)
+├── checked: boolean
+├── addedAt: ISO 8601
+└── checkedAt?: ISO 8601
+
+UserSettings
+└── darkMode: boolean
+```
+
+## Regras
+- total = sum(quantity * price where checked && price != null)
+- quantidade aceita vírgula/ponto, >0, 3 casas
+- histórico = snapshots completos
+
+## Exemplo
+```json
+{
+  "currentList": {
+    "id": "uuid", "name": "Lista Fácil", "createdAt": "2026-09-22T10:00:00Z",
+    "items": [
+      { "id": "uuid", "name": "Carne", "quantity": 0.6, "price": 20.0, "checked": true, "addedAt": "...", "checkedAt": "..." }
+    ],
+    "total": 12.0
+  },
+  "history": [],
+  "settings": { "darkMode": false }
+}
+```
