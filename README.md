@@ -1,5 +1,7 @@
 # Lista Fácil — Lista de Compras Inteligente
 
+> **Acesse agora:** https://diogo-v-s.github.io/ListaFacil/
+>
 > PWA simples, rápida e gratuita para organizar compras, com cálculo automático do total (qtd × preço unitário), controle de peso e histórico.
 
 ## 💡 Ideia
@@ -17,15 +19,22 @@ Simplicidade, controle financeiro em tempo real, leveza (zero deps) e custo zero
 - **Checkbox** só soma ao total quando marcado
 - **Total pílula** sticky mobile, `0 4px 12px rgba(0,0,0,0.08)`
 - Clique no **nome** para editar inline (Enter salva, Esc cancela)
-- Lixeira, **Nova Lista** (arquiva no histórico), **Histórico** modal, **Export/Import** JSON, **Modo escuro**
+- Lixeira, **Nova Lista** (arquiva no histórico), **Histórico** modal, **Compartilhar via link** + **Exportar PDF** (Print), **Modo escuro**
 
 ## 🛠️ Tecnologias
-HTML5 + CSS3 Custom Properties (paleta `#D85012`/`#F5EBE1`/`#D7B18A`/`#1E2A38`) + JS vanilla + `localStorage` (`lista-facil-data`) + PWA (`manifest.json` + `sw.js` `v4`) + GitHub Pages. Ícones SVG inline, fonte `Inter`.
+HTML5 + CSS3 Custom Properties (paleta `#D85012`/`#F5EBE1`/`#D7B18A`/`#1E2A38`) + JS vanilla + `localStorage` (`lista-facil-data`) + PWA (`manifest.json` + `sw.js` `v6`) + GitHub Pages + Print-to-PDF nativo. Ícones SVG inline, fonte `Inter`.
 
 ## 📦 Estrutura
 ```
 index.html  manifest.json  sw.js  icon-192.svg  icon-512.svg
 ```
+
+## 🔗 Acesso (GitHub Pages)
+**Link oficial:** https://diogo-v-s.github.io/ListaFacil/
+
+## 📤 Exportação
+- **Link compartilhável** — botão 🔗 Compartilhar gera `?share=` (base64 url-safe). Quem abrir o link importa no dispositivo com 1 clique, sem arquivo
+- **PDF via Impressão** — botão 🖨️ Imprimir/PDF gera PDF nativo do navegador (`window.print()`, sem libs, visual apenas)
 
 ## 🚀 Rodar local
 ```bash
@@ -33,4 +42,4 @@ npx serve .
 ```
 
 ## 🌐 Deploy GitHub Pages
-Push para `main` → Settings → Pages → `main / root` → `https://SEU_USUARIO.github.io/lista-facil/`
+Publicado em `https://diogo-v-s.github.io/ListaFacil/` via `main` → Settings → Pages → `main / root`
