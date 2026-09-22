@@ -12,6 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="idb.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
@@ -431,8 +432,10 @@ dialog::backdrop{background:rgba(20,12,6,0.45);backdrop-filter:blur(2px)}
 </dialog>
 
 <script>
-(() => {
+(async () => {
   const STORAGE_KEY = 'lista-facil-data';
+  const STORAGE_IDB_KEY = 'lista-facil-data';
+  const STORAGE_BACKUP_KEY = 'lista-facil-data_corrupt_backup';
   const $ = (s, r=document) => r.querySelector(s);
   const $$ = (s, r=document) => [...r.querySelectorAll(s)];
   const els = {
@@ -467,7 +470,13 @@ dialog::backdrop{background:rgba(20,12,6,0.45);backdrop-filter:blur(2px)}
     history: [],
     settings: { darkMode: window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches }
   });
-  let state = load();
+  // pede persistência para PWA não ser limpa ao fechar
+  if (navigator.storage && navigator.storage.persist) {
+    navigator.storage.persist().then(v => console.debug('[ListaFácil] persist:', v));
+  }
+
+  let state = null;
+
   const roundQty = (n) => Math.round(n * 1000) / 1000;
   const formatQty = (n) => {
     if(n == null || isNaN(n)) return '1';
@@ -488,22 +497,64 @@ dialog::backdrop{background:rgba(20,12,6,0.45);backdrop-filter:blur(2px)}
     it.quantity = q != null ? q : 1;
     return it;
   }
-  function load(){
+  async function load(){
+    let raw = null;
+    let fromIdb = false;
+    try{ raw = localStorage.getItem(STORAGE_KEY); }catch{}
+    if(!raw && typeof idbGet === 'function'){
+      try{ raw = await idbGet(STORAGE_IDB_KEY); fromIdb = !!raw; }catch{}
+      if(raw) console.debug('[ListaFácil] restaurado do IndexedDB');
+    }
+    if(!raw) return defaultData();
     try{
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if(!raw) return defaultData();
       const parsed = JSON.parse(raw);
-      if(!parsed.currentList || !Array.isArray(parsed.currentList.items)) return defaultData();
+      if(!parsed.currentList || !Array.isArray(parsed.currentList.items)){
+        throw new Error('currentList inválido');
+      }
       if(!Array.isArray(parsed.history)) parsed.history = [];
       if(!parsed.settings) parsed.settings = { darkMode: false };
       parsed.currentList.items.forEach(normalizeItem);
       parsed.history.forEach(h => Array.isArray(h.items) && h.items.forEach(normalizeItem));
       recalcTotal(parsed.currentList);
       parsed.history.forEach(recalcTotal);
+      // se veio do IDB, regrava no localStorage para sincronizar
+      if(fromIdb){
+        try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed)); }catch{}
+      }
       return parsed;
-    }catch{ return defaultData(); }
+    }catch(e){
+      // backup permanente para debug futuro, não apaga nunca
+      try{
+        const backupRaw = raw || '';
+        if(backupRaw) localStorage.setItem(STORAGE_BACKUP_KEY, backupRaw);
+        if(typeof idbSet === 'function') await idbSet(STORAGE_BACKUP_KEY, backupRaw);
+        console.warn('[ListaFácil] dados corrompidos, backup salvo em', STORAGE_BACKUP_KEY, e);
+      }catch{}
+      return defaultData();
+    }
   }
-  function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  function save(){
+    try{
+      const raw = JSON.stringify(state);
+      localStorage.setItem(STORAGE_KEY, raw);
+      // fire-and-forget IndexedDB (não bloqueia UI)
+      if(typeof idbSet === 'function') idbSet(STORAGE_IDB_KEY, raw);
+    }catch(e){
+      console.error('[ListaFácil] erro ao salvar', e);
+      // tenta só IDB se localStorage estourou
+      try{
+        if(typeof idbSet === 'function') idbSet(STORAGE_IDB_KEY, JSON.stringify(state));
+      }catch{}
+    }
+  }
+  // garante flush antes do OS matar a PWA
+  function saveFlush(){ try{ save(); }catch{} }
+  document.addEventListener('visibilitychange', () => { if(document.hidden) saveFlush(); });
+  window.addEventListener('pagehide', saveFlush);
+  window.addEventListener('beforeunload', saveFlush);
+
+  // boot async
+  state = await load();
   function recalcTotal(list){
     const sum = list.items.filter(i=>i.checked && typeof i.price === 'number' && !isNaN(i.price)).reduce((s,i)=>{
       const qty = (typeof i.quantity === 'number' && !isNaN(i.quantity) && i.quantity > 0) ? i.quantity : 1;

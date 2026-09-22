@@ -1,5 +1,5 @@
-const CACHE = 'lista-facil-v7';
-const ASSETS = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg'];
+const CACHE = 'lista-facil-v8';
+const ASSETS = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg', './idb.js'];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
 });
@@ -10,6 +10,9 @@ self.addEventListener('activate', (e) => {
 });
 self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET') return;
+  const url = new URL(e.request.url);
+  // Não cachear share links nem requisições com query - sempre vai à rede
+  if (url.searchParams.has('share')) return;
   e.respondWith(
     caches.match(e.request).then((cached) => {
       const fetched = fetch(e.request)
