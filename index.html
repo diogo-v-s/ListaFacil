@@ -304,6 +304,8 @@ dialog::backdrop{background:rgba(20,12,6,0.45);backdrop-filter:blur(2px)}
 .btn-reopen:hover{background:var(--primary-hover)}
 .btn-delete-history{padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border-divider);background:transparent;color:var(--text-muted);font-weight:600;font-size:13px}
 .btn-delete-history:hover{background:var(--bg-input-hover);color:#C0392B}
+.btn-copy{padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--primary);background:transparent;color:var(--primary);font-weight:700;font-size:13px}
+.btn-copy:hover{background:var(--primary);color:var(--primary-text)}
 
 /* toast */
 .toast{
@@ -645,7 +647,8 @@ dialog::backdrop{background:rgba(20,12,6,0.45);backdrop-filter:blur(2px)}
           `}).join('') || '<span style="font-size:13px;color:var(--text-muted)">Lista vazia</span>'}
         </div>
         <div class="history-actions">
-          <button class="btn-reopen" type="button" data-reopen="${escapeHtml(h.id)}" title="Reabrir esta lista">Reabrir esta lista</button>
+          <button class="btn-copy" type="button" data-copy="${escapeHtml(h.id)}" title="Copiar para nova compra">Copiar</button>
+          <button class="btn-reopen" type="button" data-reopen="${escapeHtml(h.id)}" title="Reabrir esta lista">Reabrir</button>
           <button class="btn-delete-history" type="button" data-delete-history="${escapeHtml(h.id)}" title="Excluir do histórico">Excluir</button>
         </div>
       </div>
@@ -681,6 +684,28 @@ dialog::backdrop{background:rgba(20,12,6,0.45);backdrop-filter:blur(2px)}
       recalcTotal(state.currentList);
       save();
       render();
+      // se todos marcados, pergunta se quer arquivar
+      if(state.currentList.items.length > 0 && state.currentList.items.every(i=>i.checked)){
+        setTimeout(()=>{
+          if(state.currentList.items.length===0 || !state.currentList.items.every(i=>i.checked)) return;
+          if(confirm(`Todos os ${state.currentList.items.length} itens marcados. Arquivar esta compra no histórico?`)){
+            const snap = {
+              id: state.currentList.id,
+              name: `Compras ${new Date().toLocaleDateString('pt-BR')}`,
+              createdAt: state.currentList.createdAt,
+              completedAt: nowISO(),
+              items: state.currentList.items.map(i=>({...i})),
+              total: state.currentList.total
+            };
+            state.history.unshift(snap);
+            if(state.history.length > 50) state.history = state.history.slice(0,50);
+            state.currentList = { id: newId(), name: 'Lista Fácil', createdAt: nowISO(), items: [], total: 0 };
+            save();
+            render();
+            showToast('Compra arquivada no histórico');
+          }
+        }, 250);
+      }
     }
   });
   function updateTotalUI(){
@@ -861,6 +886,50 @@ dialog::backdrop{background:rgba(20,12,6,0.45);backdrop-filter:blur(2px)}
         const isOpen = card.classList.toggle('open');
         toggle.setAttribute('aria-expanded', String(isOpen));
       }
+      return;
+    }
+    const copyBtn = e.target.closest('[data-copy]');
+    if(copyBtn){
+      const hid = copyBtn.getAttribute('data-copy');
+      const h = state.history.find(x=>x.id===hid);
+      if(!h) return;
+      // se lista atual tem itens (não salva), pergunta se arquiva antes
+      if(state.currentList.items.length > 0){
+        const wantSave = confirm(`Lista atual tem ${state.currentList.items.length} item(s) não arquivado(s). Arquivar antes de copiar "${h.name}" para nova compra?`);
+        if(wantSave){
+          const snap = {
+            id: state.currentList.id,
+            name: `Compras ${new Date().toLocaleDateString('pt-BR')}`,
+            createdAt: state.currentList.createdAt,
+            completedAt: nowISO(),
+            items: state.currentList.items.map(i=>({...i})),
+            total: state.currentList.total
+          };
+          state.history.unshift(snap);
+          if(state.history.length > 50) state.history = state.history.slice(0,50);
+        }
+      }
+      // cria nova lista a partir do histórico (sem prefixo "Cópia")
+      state.currentList = {
+        id: newId(),
+        name: 'Lista Fácil',
+        createdAt: nowISO(),
+        items: h.items.map(it => ({
+          ...it,
+          id: newId(),
+          checked: false,
+          checkedAt: undefined,
+          addedAt: nowISO(),
+          quantity: parseQty(it.quantity) ?? 1,
+          price: it.price
+        })),
+        total: 0
+      };
+      recalcTotal(state.currentList);
+      save();
+      render();
+      els.modalHistory.close();
+      showToast('Lista copiada — pronta para nova compra');
       return;
     }
     const reopen = e.target.closest('[data-reopen]');

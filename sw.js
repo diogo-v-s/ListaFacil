@@ -1,4 +1,4 @@
-const CACHE = 'lista-facil-v8';
+const CACHE = 'lista-facil-v9';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg', './idb.js'];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
